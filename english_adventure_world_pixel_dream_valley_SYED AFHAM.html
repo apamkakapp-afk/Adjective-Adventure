@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Adventure World — Pixel Quest</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+:root{--ink:#28223c;--cream:#fff5d9;--sky:#a9c8ff;--blue:#668ee8;--pink:#f5a7c8;--green:#79c995;--yellow:#ffd76a;--purple:#9b83d8;--red:#e87575;--panel:#fff9e9}
+*{box-sizing:border-box}
+body{margin:0;background:#8fb0ef;color:var(--ink);font-family:'VT323',monospace;font-size:23px;image-rendering:pixelated}
+body:before{content:"";position:fixed;inset:0;z-index:-1;background-color:#a9c8ff;background-image:linear-gradient(45deg,rgba(255,255,255,.17) 25%,transparent 25%),linear-gradient(-45deg,rgba(255,255,255,.17) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(255,255,255,.17) 75%),linear-gradient(-45deg,transparent 75%,rgba(255,255,255,.17) 75%);background-size:32px 32px;background-position:0 0,0 16px,16px -16px,-16px 0}
+button,select,input{font:inherit}
+button{cursor:pointer}
+.shell{max-width:1100px;margin:24px auto;padding:12px}
+.game-frame{background:#e8e0ff;border:6px solid var(--ink);box-shadow:0 0 0 6px #fff4d2,0 12px 0 rgba(40,34,60,.3);padding:10px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#302a48;color:#fff4d2;padding:12px 16px;border:4px solid #171326;font-family:'Press Start 2P';font-size:10px}
+.hearts{color:#ff8eaa;letter-spacing:3px}
+.hero{position:relative;overflow:hidden;min-height:300px;background:#9ec4ff;border:4px solid var(--ink);margin-top:10px;padding:28px 24px;display:grid;grid-template-columns:1.5fr .8fr;align-items:center}
+.hero:before{content:"";position:absolute;left:0;right:0;bottom:0;height:68px;background:repeating-linear-gradient(90deg,#6fbd86 0 32px,#5eaa78 32px 64px);border-top:5px solid #34445d}
+.hero:after{content:"";position:absolute;bottom:65px;left:0;right:0;height:18px;background:repeating-linear-gradient(90deg,#86d99b 0 16px,#9be6a8 16px 32px)}
+.hero-copy{position:relative;z-index:1;max-width:650px}
+.eyebrow{font-family:'Press Start 2P';font-size:9px;line-height:2;color:#554b85}
+h1{font-family:'Press Start 2P';font-size:clamp(20px,4vw,34px);line-height:1.65;margin:8px 0;color:#352a5b;text-shadow:3px 3px #fff}
+.hero p{font-size:27px;margin:8px 0 18px}
+.pixel-btn{border:4px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:10px 14px;background:var(--yellow);color:var(--ink);font-family:'Press Start 2P';font-size:10px;line-height:1.7}
+.pixel-btn:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.pixel-btn:active{transform:translate(4px,4px);box-shadow:none}
+.sprite-stage{position:relative;z-index:1;display:flex;justify-content:center;align-items:center;gap:12px;min-height:170px}
+.sprite{width:150px;height:150px;image-rendering:pixelated;filter:drop-shadow(5px 6px 0 rgba(40,34,60,.25))}
+.floating{animation:bob 1.8s steps(4) infinite}@keyframes bob{50%{transform:translateY(-9px)}}
+.hud{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.hudbox{background:#fff4d2;border:4px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:8px 12px;font-size:21px}
+.hudbox b{font-family:'Press Start 2P';font-size:9px}
+.world-map{background:#8ed2a2;border:4px solid var(--ink);padding:15px;margin-top:12px;position:relative}
+.map-title{font-family:'Press Start 2P';font-size:12px;text-align:center;margin:4px 0 14px}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.level{background:#fff4d2;border:4px solid var(--ink);box-shadow:4px 4px 0 var(--ink);min-height:115px;padding:10px;text-align:center;color:var(--ink);transition:.1s}
+.level:hover{transform:translateY(-4px)}
+.level .icon{display:block;font-size:35px;line-height:1.3}
+.level small{display:block;font-family:'Press Start 2P';font-size:8px;line-height:1.7;margin-top:6px}
+.level.done{background:#d7f4b8}
+.section{display:none;background:var(--panel);border:5px solid var(--ink);box-shadow:6px 6px 0 var(--ink);margin:18px 0;padding:18px}
+.section.active{display:block;animation:pop .18s steps(3)}@keyframes pop{from{transform:scale(.98)}to{transform:scale(1)}}
+.section h2{font-family:'Press Start 2P';font-size:15px;line-height:1.8;margin:0 0 12px;color:#55458f}
+.section h3{font-family:'Press Start 2P';font-size:10px;line-height:1.8}
+.dialogue{background:#fff;border:4px solid var(--ink);padding:12px 15px;box-shadow:4px 4px 0 #b8a9d8;margin:12px 0}
+.note{background:#fff0b8;border:3px dashed #b77a34;padding:10px 13px;margin:12px 0}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.word-card{border:4px solid var(--ink);background:#dce9ff;box-shadow:3px 3px 0 var(--ink);padding:12px 8px;text-align:center;min-height:110px}
+.word-card:nth-child(3n+2){background:#ffe0ed}.word-card:nth-child(3n){background:#e0f5ce}
+.word-card button{background:none;border:0;color:var(--ink);font-family:'Press Start 2P';font-size:9px;line-height:1.8}
+.word-card .detail{display:none;font-size:21px;line-height:1.1;margin-top:8px}.word-card.open .detail{display:block}
+.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;background:white}th,td{border:3px solid var(--ink);padding:8px;text-align:left}th{background:#d9d0ff}
+.practice-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#e5efff;border:3px solid var(--ink);padding:12px;margin:10px 0}
+select,input{border:3px solid var(--ink);background:#fff;padding:6px;max-width:100%}
+.feedback{font-weight:bold;min-height:25px}
+.quiz-q{border:3px solid var(--ink);padding:12px;margin:12px 0;background:#fff}
+.quiz-q p{margin:0 0 8px;font-weight:bold}
+.quiz-q label{display:inline-block;margin:5px 12px 5px 0;cursor:pointer}
+.progress{height:18px;border:3px solid var(--ink);background:#fff;margin:10px 0}.progress span{display:block;height:100%;width:0;background:#78ca92;transition:width .2s}
+.result{font-family:'Press Start 2P';font-size:11px;line-height:2;background:#dff4c9;padding:12px;border:3px solid var(--ink);margin-top:12px}
+.footer-controls{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px}
+.character-box{display:grid;grid-template-columns:180px 1fr;gap:14px;align-items:center}
+.avatar{background:#c6dcff;border:4px solid var(--ink);min-height:180px;display:grid;place-items:center;font-size:75px}
+.portal{background:#302a48;color:white;padding:18px;border:4px solid var(--ink);text-align:center}
+.portal a{display:inline-block;margin-top:10px;color:#302a48;background:#ffe17d;padding:12px;border:4px solid #171326;font-family:'Press Start 2P';font-size:10px;line-height:1.8;text-decoration:none}
+@media(max-width:720px){.hero{grid-template-columns:1fr}.sprite-stage{min-height:120px}.sprite{width:110px;height:110px}.levels{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:repeat(2,1fr)}.character-box{grid-template-columns:1fr}.topbar{font-size:8px}}
+@media(max-width:420px){.cards{grid-template-columns:1fr 1fr}.shell{padding:5px}.section{padding:12px}.hero{padding:18px}}
+
+/* Cheerful bright kid-friendly colour upgrade */
+:root{--ink:#26345a;--cream:#fff9d9;--sky:#8de5ff;--blue:#55b9f2;--pink:#ff9fc9;--green:#8be39b;--yellow:#ffe45e;--purple:#b69bff;--red:#ff8585;--panel:#fffef2}
+body{background:#79d9f4}
+body:before{background-color:#8de5ff;background-image:radial-gradient(circle at 12px 12px,rgba(255,255,255,.65) 0 4px,transparent 5px),linear-gradient(135deg,rgba(255,244,133,.25),rgba(255,160,205,.22));background-size:42px 42px,100% 100%}
+.game-frame{background:#fff0a8;border-color:#26345a;box-shadow:0 0 0 6px #fff,0 12px 0 rgba(38,52,90,.22)}
+.topbar{background:#ff83b5;color:#fff;border-color:#26345a}
+.hero{background:linear-gradient(135deg,#9cecff 0%,#c9f7b6 55%,#fff0a1 100%)}
+.hero:before{background:repeating-linear-gradient(90deg,#65d68a 0 32px,#4fc477 32px 64px)}
+.hero:after{background:repeating-linear-gradient(90deg,#a7f08d 0 16px,#c7f99e 16px 32px)}
+.eyebrow{color:#7651b8} h1{color:#5140a0;text-shadow:3px 3px #fff,5px 5px #ffcae0}
+.world-map{background:#a7efb0}
+.level:nth-child(4n+1){background:#fff1a6}.level:nth-child(4n+2){background:#ffd5e8}.level:nth-child(4n+3){background:#c9f3ff}.level:nth-child(4n){background:#d9d0ff}
+.section{background:#fffef2}.section h2{color:#7451c8}
+.pixel-btn{background:#ffe45e}.pixel-btn:nth-child(even){background:#ffacd0}
+.hudbox{background:#fff0a6}.dialogue{background:#e8faff;box-shadow:4px 4px 0 #a6dff2}
+.note{background:#fff3ad;border-color:#ffae56}
+.multimedia-panel{background:#e9dcff;border-color:#26345a}
+.small-btn{background:#ffb7d7!important;border-color:#26345a!important;color:#26345a!important}
+.site-footer{background:#8ce8b0}
+@keyframes sparklePop{0%,100%{filter:brightness(1)}50%{filter:brightness(1.15)}}
+.level:hover,.word-card:hover,.pixel-btn:hover{animation:sparklePop .6s steps(2) infinite}
+
+/* PIXEL DREAM VALLEY redesign — inspired by the supplied pastel desktop aesthetic */
+body{background:#fff;color:#393344;font-family:'VT323',monospace}
+body:before{background:radial-gradient(circle,#ffe1ee 1.5px,transparent 2px);background-size:22px 22px;opacity:.22}
+.sakura-banner{height:230px;position:relative;overflow:hidden;background:linear-gradient(#91e7f5 0%,#c5f4ed 48%,#ffe0ed 100%);border-bottom:7px solid #fff;image-rendering:pixelated}
+.banner-sun{position:absolute;width:72px;height:72px;border-radius:50%;background:#fff2a8;right:17%;top:30px;box-shadow:0 0 0 12px rgba(255,255,255,.18)}
+.banner-mountain{position:absolute;bottom:0;width:0;height:0;border-left:180px solid transparent;border-right:180px solid transparent}
+.mountain-one{left:31%;border-bottom:170px solid #b78d9c}
+.mountain-one:after{content:"";position:absolute;left:-65px;top:20px;border-left:65px solid transparent;border-right:65px solid transparent;border-bottom:72px solid #fff0ee}
+.mountain-two{left:52%;border-left-width:130px;border-right-width:130px;border-bottom:125px solid #a8b6a9}
+.banner-gate{position:absolute;bottom:0;left:57%;width:210px;height:90px;border-top:15px solid #bd718c}
+.banner-gate:before{content:"";position:absolute;left:12px;right:12px;top:-23px;height:14px;background:#d68aa3;border:5px solid #8d526c}
+.banner-gate i{position:absolute;top:-8px;width:20px;height:100px;background:#b96c88;border:4px solid #87516a}
+.banner-gate i:first-child{left:0}.banner-gate i:last-child{right:0}
+.blossom-tree{position:absolute;bottom:-25px;width:210px;height:220px;border-left:13px solid #866b68;transform:rotate(-12deg)}
+.blossom-tree:before,.blossom-tree:after{content:"";position:absolute;height:9px;background:#866b68;transform-origin:left}
+.blossom-tree:before{width:145px;top:40px;left:-5px;transform:rotate(-38deg)}
+.blossom-tree:after{width:125px;top:90px;left:-8px;transform:rotate(30deg)}
+.blossom-tree span{position:absolute;width:100px;height:70px;background:#ffb5d0;clip-path:polygon(50% 0,63% 27%,100% 20%,78% 52%,95% 90%,52% 75%,20% 100%,25% 58%,0 30%,39% 31%);filter:drop-shadow(3px 3px #e88eae)}
+.blossom-tree span:nth-child(1){top:10px;left:5px}.blossom-tree span:nth-child(2){top:65px;left:75px}.blossom-tree span:nth-child(3){top:115px;left:-40px}
+.tree-left{left:25px}.tree-right{right:20px;transform:scaleX(-1) rotate(-12deg)}
+.banner-cloud{position:absolute;width:100px;height:20px;background:#fff;opacity:.7;top:55px;left:12%;box-shadow:18px -13px #fff,38px 0 #fff}
+.cloud-two{left:75%;top:100px;transform:scale(.7)}
+.banner-title{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);font:10px 'Press Start 2P';color:#fff;text-shadow:2px 2px #bd7192;white-space:nowrap;letter-spacing:2px}
+.shell{max-width:1400px;margin:0 auto;padding:25px 4%}
+.game-frame{background:transparent;border:0;box-shadow:none;padding:0}
+.topbar{background:#fff;border:0;border-bottom:2px solid #f4e8ed;color:#554b5d;padding:12px 4px;font-size:9px}
+.hearts{color:#ef8eae}
+.hero{min-height:285px;border:0;border-radius:5px;background:linear-gradient(100deg,#fff0f6,#f3edff 58%,#e7fbff);padding:35px 5%;margin-top:25px;box-shadow:0 8px 0 #f6dce8}
+.hero:before{height:38px;background:repeating-linear-gradient(90deg,#b8e9c4 0 24px,#a4ddb4 24px 48px);border:0}
+.hero:after{bottom:38px;height:9px;background:repeating-linear-gradient(90deg,#d0f2c7 0 12px,#e0f8d5 12px 24px)}
+.eyebrow{color:#b45e86}h1{color:#c45e86;text-shadow:3px 3px #fff,5px 5px #f8c6d9}
+.hero p{color:#5b5262}
+.pixel-btn{border:2px solid #9a6078;box-shadow:4px 4px 0 #e7a8c0;border-radius:2px;background:#ffd4e4;color:#684458}
+.pixel-btn:hover{box-shadow:2px 2px 0 #e7a8c0}
+.hud{justify-content:center}
+.hudbox{background:#fff;border:1px solid #efd6e1;box-shadow:2px 3px 0 #f4e3eb;border-radius:3px}
+.world-map{background:#fff;border:0;border-top:2px solid #f4e8ed;border-bottom:2px solid #f4e8ed;padding:25px 8px; margin-top:22px}
+.map-title{color:#9b6680}
+.levels{gap:14px}
+.level{border:1px solid #e8cbd9;box-shadow:3px 3px 0 #f3e5ed;border-radius:4px;min-height:125px}
+.level:nth-child(4n+1){background:#fff1f6}.level:nth-child(4n+2){background:#f6efff}.level:nth-child(4n+3){background:#eafaff}.level:nth-child(4n){background:#f0f9e9}
+.level:hover{transform:translateY(-4px);box-shadow:4px 6px 0 #e8cbd9}
+.section{border:1px solid #ecd9e2;box-shadow:0 5px 0 #f4e8ed;border-radius:4px;background:#fff;margin:25px 0;padding:24px}
+.section h2{color:#b75f87}
+.dialogue{background:#fff1f7;border:1px solid #f0cddd;box-shadow:3px 3px 0 #f7e6ee}
+.note{background:#fff8df;border:1px dashed #e8c77a;border-radius:3px}
+.multimedia-panel{background:#f8f3ff;border:1px solid #e4d6f4;border-radius:4px}
+.word-card{border:1px solid #e7d4df;box-shadow:2px 3px 0 #f1e4eb;border-radius:3px}
+.practice-row,.quiz-q{border:1px solid #e8d8e2;border-radius:3px}
+.site-footer{background:#fff0f6;border:1px solid #f0d4e0;padding:20px;text-align:center;color:#875b72;border-radius:4px}
+.music-dock{position:fixed;z-index:20;right:18px;top:18px;display:flex;align-items:center;gap:9px;background:#fff;border:2px solid #e9bfd0;box-shadow:3px 3px 0 #eddae3;padding:8px 12px;color:#b45e86;font:8px 'Press Start 2P'}
+.music-dock button{border:0;background:#ffe0ed;color:#78475f;padding:8px;font:8px 'Press Start 2P';cursor:pointer}
+.music-equalizer{letter-spacing:2px;color:#8ed6c0;animation:equalize .7s steps(2) infinite}
+@keyframes equalize{50%{opacity:.35;transform:scaleY(.65)}}
+@media(max-width:720px){.sakura-banner{height:160px}.banner-title{font-size:7px}.music-dock{top:auto;bottom:12px;right:10px}.shell{padding:16px 12px}.hero{padding:24px 18px}}
+
+
+/* Responsive embedded Genially game portal */
+.genially-frame-wrap{margin:20px auto 12px;max-width:1000px;background:#fff7fb;border:3px solid #e7b5ca;box-shadow:5px 5px 0 #f1dce6;border-radius:5px;overflow:hidden}
+.genially-frame-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:#ffe2ee;color:#89516b;font:9px 'Press Start 2P';border-bottom:2px solid #e7b5ca}
+.genially-live{color:#478c75;font-size:8px}
+.genially-embed{display:block;width:100%;height:clamp(440px,68vw,700px);border:0;background:#fff}
+.genially-fallback{text-align:center;font-size:16px;color:#69566a}
+.genially-fallback a{color:#b75f87;font-weight:bold;text-decoration:underline}
+@media(max-width:600px){.genially-frame-heading{font-size:7px}.genially-embed{height:560px}}
+
+</style>
+</head>
+<body>
+<div class="sakura-banner" aria-label="Pixel-art cherry blossom landscape"><div class="banner-sun"></div><div class="banner-mountain mountain-one"></div><div class="banner-mountain mountain-two"></div><div class="banner-gate"><i></i><b></b><i></i></div><div class="blossom-tree tree-left"><span></span><span></span><span></span></div><div class="blossom-tree tree-right"><span></span><span></span><span></span></div><div class="banner-cloud cloud-one"></div><div class="banner-cloud cloud-two"></div><div class="banner-title">✿ PIXEL DREAM VALLEY ✿</div></div>
+<div class="music-dock"><span>♫</span><button id="musicDockButton" onclick="toggleMusic()">PLAY HAPPY GAME MUSIC</button><span class="music-equalizer">▮ ▮ ▮</span></div>
+<div class="shell"><div class="game-frame">
+<div class="topbar"><span>★ PIXEL LEARNING RPG ★</span><span class="hearts">♥ ♥ ♥</span><span>WORLD 1-1</span></div>
+<header class="hero">
+<div class="hero-copy"><div class="eyebrow">WELCOME, PLAYER 1!</div><h1>ENGLISH<br>ADVENTURE WORLD</h1><p>Explore the world of adjectives. Learn, play and collect stars!</p><button class="pixel-btn" onclick="showSection('intro')">▶ START GAME</button></div>
+<div class="sprite-stage">
+<svg class="sprite floating" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-label="pixel character"><rect x="5" y="1" width="6" height="2" fill="#28223c"/><rect x="3" y="3" width="10" height="7" fill="#f4bd83"/><rect x="4" y="4" width="2" height="2" fill="#fff"/><rect x="10" y="4" width="2" height="2" fill="#fff"/><rect x="5" y="5" width="1" height="1" fill="#28223c"/><rect x="10" y="5" width="1" height="1" fill="#28223c"/><rect x="6" y="8" width="4" height="1" fill="#b34d62"/><rect x="4" y="10" width="8" height="4" fill="#7d69c4"/><rect x="2" y="11" width="2" height="3" fill="#28223c"/><rect x="12" y="11" width="2" height="3" fill="#28223c"/><rect x="5" y="14" width="2" height="1" fill="#28223c"/><rect x="9" y="14" width="2" height="1" fill="#28223c"/><rect x="6" y="2" width="4" height="1" fill="#ffd76a"/></svg>
+<svg class="sprite floating" viewBox="0 0 16 16" style="width:95px;height:95px;animation-delay:.4s" shape-rendering="crispEdges" aria-label="pixel star"><path fill="#28223c" d="M7 0h2v4h3v2h3v2h-4v2h-1v4H6v-4H5V8H1V6h4V4h2z"/><path fill="#ffd34e" d="M7 2h2v3h3v2h2v1h-4v2H9v3H7v-3H6V8H3V7h3V5h1z"/><rect x="7" y="6" width="2" height="2" fill="#fff2a5"/></svg>
+</div></header>
+<div class="hud"><div class="hudbox">⭐ STARS: <b id="stars">0</b></div><div class="hudbox">🗺️ LEVELS: <b>9</b></div><div class="hudbox">🎒 TOPIC: <b>ADJECTIVES</b></div></div>
+<nav class="world-map"><div class="map-title">🗺️ SELECT YOUR LEVEL</div><div class="levels">
+<button class="level" onclick="showSection('intro')"><span class="icon">📜</span><small>01<br>ADJECTIVE TOWN</small></button>
+<button class="level" onclick="showSection('appearance')"><span class="icon">🥚</span><small>02<br>APPEARANCE ARCADE</small></button>
+<button class="level" onclick="showSection('personality')"><span class="icon">💖</span><small>03<br>PERSONALITY GARDEN</small></button>
+<button class="level" onclick="showSection('sentences')"><span class="icon">🧪</span><small>04<br>SENTENCE LAB</small></button>
+<button class="level" onclick="showSection('grammar')"><span class="icon">🛠️</span><small>05<br>GRAMMAR REPAIR</small></button>
+<button class="level" onclick="showSection('quiz')"><span class="icon">⭐</span><small>06<br>STAR QUIZ</small></button>
+<button class="level" onclick="showSection('creator')"><span class="icon">🐱</span><small>07<br>CHARACTER MAKER</small></button>
+<button class="level" onclick="showSection('bonus')"><span class="icon">🎮</span><small>BONUS<br>GENIALLY GAME</small></button>
+<button class="level" onclick="showSection('listening')"><span class="icon">🎧</span><small>08<br>LISTENING FOREST</small></button>
+</div></nav>
+
+<section id="intro" class="section active"><h2>LEVEL 01: ADJECTIVE TOWN</h2><div class="dialogue">🧙‍♂️ <b>Professor Pixel says:</b> Hello, adventurer! An adjective is a describing word. It tells us more about a person, animal, place or thing.</div>
+<p>When we describe people, adjectives can tell us about their <b>appearance</b> or <b>personality</b>.</p>
+<div class="cards"><div class="word-card"><span>📏</span><h3>TALL</h3><p>Ali is tall.</p></div><div class="word-card"><span>😊</span><h3>FRIENDLY</h3><p>Sarah is friendly.</p></div><div class="word-card"><span>🌀</span><h3>CURLY</h3><p>Adam has curly hair.</p></div><div class="word-card"><span>🌞</span><h3>CHEERFUL</h3><p>Aina is cheerful.</p></div></div>
+<div class="note">⭐ Remember: An adjective describes. It gives us more information about someone or something.</div>
+<div class="multimedia-panel">
+  <h3>🔊 PROFESSOR PIXEL'S AUDIO CORNER</h3>
+  <p>Tap a word to hear how it sounds. You can also listen to the example sentence.</p>
+  <div class="audio-toolbar">
+    <button class="small-btn" onclick="speakText('Adjective')">🔊 Adjective</button>
+    <button class="small-btn" onclick="speakText('Tall')">🔊 Tall</button>
+    <button class="small-btn" onclick="speakText('Friendly')">🔊 Friendly</button>
+    <button class="small-btn" onclick="speakText('She is cheerful.')">🔊 Example sentence</button>
+    <button class="small-btn" id="soundToggle" onclick="toggleSound()">✨ Sound effects: ON</button>
+    <button class="small-btn" id="musicToggle" onclick="toggleMusic()">🎶 Background music: OFF</button>
+  </div>
+  <p class="note">Tip: Use the speaker buttons to practise listening and pronunciation.</p>
+</div>
+<div class="multimedia-panel">
+  <h3>🎬 PIXEL VIDEO LESSON: WHAT ARE ADJECTIVES?</h3>
+  <p>Watch Professor Pixel's short animated lesson. Press play to begin the scenes and narration.</p>
+  <div class="lesson-video">
+    <div class="video-screen" aria-live="polite">
+      <div>
+        <div class="video-character" id="lessonCharacter">🧙</div>
+        <div class="video-word" id="lessonWord">ADJECTIVES!</div>
+        <div class="video-caption" id="lessonCaption">An adjective is a describing word.</div>
+      </div>
+    </div>
+    <div class="video-controls">
+      <button class="small-btn" id="lessonPlay" onclick="startMiniLesson()">▶ PLAY LESSON</button>
+      <button class="small-btn" onclick="pauseMiniLesson()">Ⅱ PAUSE</button>
+      <button class="small-btn" onclick="restartMiniLesson()">↺ RESTART</button>
+      <div class="video-progress" aria-label="Lesson progress"><span id="lessonProgress"></span></div>
+    </div>
+  </div>
+  <p class="note">This is a self-contained animated lesson, so it works without an external video link.</p>
+</div>
+<div class="multimedia-panel">
+  <h3>🧍 LOOK AND DESCRIBE</h3>
+  <p>Look at the pixel characters. Which adjective describes each one?</p>
+  <div class="pixel-scene">
+    <div style="text-align:center"><div class="pixel-person tall"><div class="head"><span class="eyes"></span></div><div class="body"></div><div class="legs"></div></div><div class="scene-caption">ALEX</div></div>
+    <div style="text-align:center"><div class="pixel-person short green"><div class="head"><span class="eyes"></span></div><div class="body"></div><div class="legs"></div></div><div class="scene-caption">SAM</div></div>
+    <div class="scene-caption">Compare their height:<br><span class="adjective-chip">tall</span><span class="adjective-chip">short</span></div>
+  </div>
+</div>
+</section>
+
+<section id="appearance" class="section"><h2>LEVEL 02: APPEARANCE ARCADE</h2><p>Appearance adjectives describe what a person looks like. Tap a treasure card to reveal its meaning and example!</p><div class="cards" id="appearanceCards"></div><div class="note">👀 Remember: Appearance = what someone looks like.</div></section>
+<section id="personality" class="section"><h2>LEVEL 03: PERSONALITY GARDEN</h2><p>Personality adjectives describe how someone behaves or treats others. Tap each card!</p><div class="cards" id="personalityCards"></div><div class="note">💗 We can describe people kindly and respectfully. Everyone has different qualities.</div></section>
+
+<section id="sentences" class="section"><h2>LEVEL 04: SENTENCE LAB</h2><h3>POWER FORMULA A: SUBJECT + IS / AM / ARE + ADJECTIVE</h3><div class="table-wrap"><table><tr><th>Subject</th><th>Verb</th><th>Example</th></tr><tr><td>He / She / It</td><td>is</td><td>She is friendly.</td></tr><tr><td>I</td><td>am</td><td>I am helpful.</td></tr><tr><td>You / We / They</td><td>are</td><td>They are cheerful.</td></tr></table></div>
+<h3>POWER FORMULA B: SUBJECT + HAS / HAVE + ADJECTIVE + NOUN</h3><div class="table-wrap"><table><tr><th>Subject</th><th>Verb</th><th>Example</th></tr><tr><td>He / She / It</td><td>has</td><td>He has short black hair.</td></tr><tr><td>I / You / We / They</td><td>have</td><td>They have curly hair.</td></tr></table></div>
+<div class="dialogue"><b>Sarah's description:</b> Sarah is tall. She has long black hair. She is friendly and helpful.</div>
+<h3>🧩 TRY THE SENTENCE MACHINE</h3><div class="practice-row">She <select id="verb1"><option value="">Choose</option><option>is</option><option>are</option><option>am</option></select> friendly. <button class="pixel-btn" onclick="checkSentence('verb1','is','fb1')">CHECK</button><span class="feedback" id="fb1"></span></div>
+<div class="practice-row">He <select id="verb2"><option value="">Choose</option><option>have</option><option>has</option></select> curly hair. <button class="pixel-btn" onclick="checkSentence('verb2','has','fb2')">CHECK</button><span class="feedback" id="fb2"></span></div>
+<div class="practice-row">They <select id="verb3"><option value="">Choose</option><option>is</option><option>are</option></select> cheerful. <button class="pixel-btn" onclick="checkSentence('verb3','are','fb3')">CHECK</button><span class="feedback" id="fb3"></span></div></section>
+
+<section id="grammar" class="section"><h2>LEVEL 05: GRAMMAR REPAIR SHOP</h2><p>Oh no! The sentences are broken. Read each correction to repair the grammar.</p><div class="table-wrap"><table><tr><th>❌ Incorrect</th><th>✅ Correct</th><th>Why?</th></tr><tr><td>She have long hair.</td><td>She has long hair.</td><td>Use <b>has</b> with she.</td></tr><tr><td>He are friendly.</td><td>He is friendly.</td><td>Use <b>is</b> with he.</td></tr><tr><td>She is tall and kindness.</td><td>She is tall and kind.</td><td>Use adjective <b>kind</b>.</td></tr><tr><td>He has curly hairs.</td><td>He has curly hair.</td><td><b>Hair</b> is generally uncountable here.</td></tr><tr><td>They is cheerful.</td><td>They are cheerful.</td><td>Use <b>are</b> with they.</td></tr><tr><td>She are helpful.</td><td>She is helpful.</td><td>Use <b>is</b> with she.</td></tr></table></div>
+<div class="note"><b>GRAMMAR CHEAT CODE</b><br> I → am / have<br> He, She, It → is / has<br> You, We, They → are / have<br>Say “curly hair”, not “curly hairs”.</div></section>
+
+<section id="quiz" class="section"><h2>LEVEL 06: STAR QUIZ</h2><p>Answer all five questions. Choose one answer for each question, then press CHECK SCORE.</p><div class="progress"><span id="progressBar"></span></div><div id="quizArea"></div><button class="pixel-btn" onclick="gradeQuiz()">★ CHECK SCORE</button><div id="quizResult"></div></section>
+
+<section id="creator" class="section"><h2>LEVEL 07: CHARACTER MAKER</h2><p>Create a character and practise describing them with adjectives.</p><div class="character-box"><div class="avatar" id="avatar">🐱</div><div><p>Name: <input id="charName" value="Alex" maxlength="18"></p><p>Appearance: <select id="charAppearance"><option>tall</option><option>short</option><option>young</option></select></p><p>Hair: <select id="charHair"><option>short black hair</option><option>long hair</option><option>curly hair</option><option>straight hair</option></select></p><p>Personality: <select id="charPersonality"><option>friendly</option><option>kind</option><option>cheerful</option><option>helpful</option><option>patient</option><option>hard-working</option></select></p><button class="pixel-btn" onclick="makeCharacter()">CREATE DESCRIPTION</button></div></div><div class="dialogue" id="characterText">Your character's description will appear here!</div>
+<h3>🏆 YOUR CHALLENGE</h3><p>Describe your favourite cartoon character using at least five adjectives.</p><div class="note">Example: Adam is tall. He has short black hair. He wears glasses. He is friendly and helpful.</div></section>
+
+
+<section id="listening" class="section">
+  <h2>LEVEL 08: LISTENING FOREST</h2>
+  <p>Listen carefully, then choose the adjective you hear.</p>
+  <div class="multimedia-panel">
+    <button class="pixel-btn" onclick="playListeningWord()">🔊 PLAY THE WORD</button>
+    <div class="practice-row"><label for="listenAnswer">I heard:</label>
+      <select id="listenAnswer"><option value="">Choose an adjective</option><option>tall</option><option>friendly</option><option>curly</option><option>cheerful</option><option>helpful</option></select>
+      <button class="pixel-btn" onclick="checkListening()">CHECK</button>
+    </div>
+    <div class="feedback" id="listenFeedback" aria-live="polite"></div>
+    <p id="listenRound">Round 1 of 5</p>
+  </div>
+  <div class="multimedia-panel">
+    <h3>🧩 DRAG THE ADJECTIVE</h3>
+    <p>Drag the correct word into the matching description box. On touch screens, you can tap a word and then tap a box.</p>
+    <div class="drag-bank" id="dragBank">
+      <button class="drag-item" draggable="true" data-word="tall">TALL</button>
+      <button class="drag-item" draggable="true" data-word="friendly">FRIENDLY</button>
+      <button class="drag-item" draggable="true" data-word="curly">CURLY</button>
+    </div>
+    <div class="practice-row"><b>Has hair with curls:</b><div class="drop-zone" data-answer="curly" tabindex="0">Drop or tap the matching word here</div></div>
+    <div class="practice-row"><b>Kind and pleasant to others:</b><div class="drop-zone" data-answer="friendly" tabindex="0">Drop or tap the matching word here</div></div>
+    <div class="practice-row"><b>Having greater height:</b><div class="drop-zone" data-answer="tall" tabindex="0">Drop or tap the matching word here</div></div>
+    <div class="feedback" id="dragFeedback" aria-live="polite"></div>
+  </div>
+</section>
+<section id="bonus" class="section">
+  <h2>BONUS STAGE: GENIALLY GAME</h2>
+  <div class="dialogue">🎮 <b>Bonus mission!</b> Your game is ready below. Click or tap inside it to start playing — no need to open another tab.</div>
+  <div class="genially-frame-wrap">
+    <div class="genially-frame-heading"><span>⭐ ADJECTIVE CHALLENGE ⭐</span><span class="genially-live">● GAME PORTAL</span></div>
+    <iframe
+      class="genially-embed"
+      src="https://view.genially.com/6adad49df281554768d495ce"
+      title="Interactive Genially Adjective Game"
+      loading="lazy"
+      allow="fullscreen; autoplay; encrypted-media"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin">
+    </iframe>
+  </div>
+  <p class="genially-fallback">If the game does not appear in your browser, <a href="https://view.genially.com/6adad49df281554768d495ce" target="_blank" rel="noopener noreferrer">open the Genially game in a new tab</a>.</p>
+</section>
+
+<div class="footer-controls"><button class="pixel-btn" onclick="previousSection()">◀ PREVIOUS</button><button class="pixel-btn" onclick="nextSection()">NEXT LEVEL ▶</button></div><div class="site-footer">⭐ KEEP EXPLORING, KEEP LEARNING! ⭐<br>Use your ears, eyes and imagination to become an English Pixel Master.</div>
+</div></div>
+<script>
+const sections=['intro','appearance','personality','sentences','grammar','quiz','creator','bonus','listening'];let current='intro';let stars=0;
+function addStar(){stars++;document.getElementById('stars').textContent=stars;playTone(880,.12)}
+function showSection(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));const target=document.getElementById(id);if(target){target.classList.add('active');current=id;target.scrollIntoView({behavior:'smooth',block:'start'})}}
+function nextSection(){showSection(sections[Math.min(sections.indexOf(current)+1,sections.length-1)])}
+function previousSection(){showSection(sections[Math.max(sections.indexOf(current)-1,0)])}
+const appearance=[['TALL','Having greater height.','He is tall.','📏'],['SHORT','Having less height.','She is short.','🪜'],['CURLY','Hair with curls.','She has curly hair.','🌀'],['STRAIGHT','Hair without curls.','He has straight hair.','〰️'],['LONG','Having greater length.','She has long hair.','📐'],['SHORT-HAIRED','Having short hair.','He is short-haired.','✂️'],['YOUNG','Not old.','She is young.','🌱']];
+const personality=[['FRIENDLY','Kind and pleasant to others.','Ali is friendly.','🤝'],['KIND','Caring and helpful.','She is kind.','💗'],['CHEERFUL','Happy and positive.','He is cheerful.','☀️'],['HELPFUL','Likes helping others.','Sarah is helpful.','🧰'],['SHY','Nervous around other people.','Adam is shy.','🌷'],['HARD-WORKING','Tries hard and works carefully.','Mia is hard-working.','📚'],['POLITE','Shows good manners.','Ben is polite.','🎀'],['PATIENT','Can wait calmly.','Aina is patient.','🐢']];
+function buildCards(id,data){document.getElementById(id).innerHTML=data.map((w,i)=>`<div class="word-card"><div style="font-size:28px">${w[3]}</div><button onclick="reveal(this)"> ${w[0]} <br>▣ TAP</button><div class="detail">${w[1]}<br><i>${w[2]}</i></div></div>`).join('')}
+function reveal(btn){const card=btn.parentElement;const opening=!card.classList.contains('open');card.classList.toggle('open');if(opening&&!card.dataset.rewarded){card.dataset.rewarded='1';addStar()}}
+buildCards('appearanceCards',appearance);buildCards('personalityCards',personality);addAudioButtons();
+document.querySelectorAll('#intro .word-card').forEach(card=>{const word=card.querySelector('h3')?.textContent;if(word){const b=document.createElement('button');b.className='small-btn';b.textContent='🔊 LISTEN';b.onclick=()=>speakText(word.toLowerCase());card.appendChild(b);}});
+function checkSentence(selectId,answer,feedbackId){const val=document.getElementById(selectId).value;const fb=document.getElementById(feedbackId);if(val===answer){fb.textContent=' ✓ Correct!';fb.style.color='#23834c';if(!fb.dataset.rewarded){fb.dataset.rewarded='1';addStar()}}else{fb.textContent=' ✗ Try again!';fb.style.color='#bd3f52'}}
+const questions=[
+['Which word describes personality?',['Tall','Short','Friendly','Curly'],2],
+['What is the opposite of tall?',['Kind','Short','Cheerful','Helpful'],1],
+['She ____ long black hair.',['have','has','having','are'],1],
+['Someone who likes helping others is…',['Lazy','Rude','Helpful','Selfish'],2],
+['Which sentence is correct?',['He are friendly.','She have curly hair.','They is kind.','She is cheerful.'],3]
+];
+function renderQuiz(){document.getElementById('quizArea').innerHTML=questions.map((q,i)=>`<div class="quiz-q"><p>${i+1}. ${q[0]}</p>${q[1].map((a,j)=>`<label><input type="radio" name="q${i}" value="${j}" onchange="updateProgress()"> ${String.fromCharCode(65+j)}. ${a}</label>`).join('')}</div>`).join('')}
+function updateProgress(){let n=questions.filter((q,i)=>document.querySelector(`input[name=q${i}]:checked`)).length;document.getElementById('progressBar').style.width=(n/5*100)+'%'}
+function gradeQuiz(){let score=0;questions.forEach((q,i)=>{const chosen=document.querySelector(`input[name=q${i}]:checked`);if(chosen&&Number(chosen.value)===q[2])score++});document.getElementById('quizResult').innerHTML=`<div class="result">YOU SCORED ${score} / 5<br>${score===5?'PERFECT! YOU ARE A PIXEL MASTER!':score>=3?'GREAT WORK, ADVENTURER!':'GOOD TRY! REVIEW THE LEVELS AND TRY AGAIN!'}</div>`;if(score===5&&!window.quizStar){window.quizStar=true;addStar()}}
+renderQuiz();
+function makeCharacter(){const name=document.getElementById('charName').value.trim()||'Alex';const app=document.getElementById('charAppearance').value;const hair=document.getElementById('charHair').value;const trait=document.getElementById('charPersonality').value;document.getElementById('characterText').innerHTML=`<b>${name}</b> is ${app}. ${name==='Alex'?'Alex':name} has ${hair}. ${name} is ${trait}.`;document.getElementById('avatar').textContent='🧑‍🎤';if(!window.characterStar){window.characterStar=true;addStar()}}
+
+
+
+// Cheerful looping chiptune. Browsers start music only after the player taps the button.
+let musicOn=false, musicContext=null, musicTimer=null, musicStep=0;
+const melody=[523.25,659.25,783.99,659.25,587.33,698.46,880,698.46,523.25,659.25,783.99,1046.5,880,783.99,659.25,587.33,659.25,783.99,880,783.99,698.46,659.25,587.33,523.25];
+function musicNote(freq,when,duration,volume=.045){
+  if(!musicContext)return;
+  const osc=musicContext.createOscillator(),gain=musicContext.createGain();
+  osc.type='square';osc.frequency.setValueAtTime(freq,when);
+  gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(volume,when+.015);gain.gain.exponentialRampToValueAtTime(.0001,when+duration);
+  osc.connect(gain);gain.connect(musicContext.destination);osc.start(when);osc.stop(when+duration+.02);
+}
+function playMusicBeat(){
+  if(!musicOn||!musicContext)return;
+  const now=musicContext.currentTime, note=melody[musicStep%melody.length];
+  musicNote(note,now,.22,.026);
+  if(musicStep%4===0)musicNote(note/2,now,.38,.012);
+  if(musicStep%8===0)musicNote(note*1.5,now+.04,.12,.009);
+  musicStep++;
+}
+async function toggleMusic(){
+  const button=document.getElementById('musicToggle');
+  if(musicOn){musicOn=false;if(musicTimer)clearInterval(musicTimer);musicTimer=null;button.textContent='🎶 Background music: OFF';const dock=document.getElementById('musicDockButton');if(dock)dock.textContent='PLAY HAPPY GAME MUSIC';return;}
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx){button.textContent='🎶 Music not supported';return;}
+    if(!musicContext)musicContext=new Ctx();
+    if(musicContext.state==='suspended')await musicContext.resume();
+    musicOn=true;musicStep=0;playMusicBeat();musicTimer=setInterval(playMusicBeat,230);
+    button.textContent='🎶 Background music: ON';const dock=document.getElementById('musicDockButton');if(dock)dock.textContent='PAUSE GAME MUSIC';
+  }catch(e){button.textContent='🎶 Music unavailable';}
+}
+
+// Browser-based speech and retro sound effects.
+let soundEnabled = true;
+function speakText(text){
+  if(!('speechSynthesis' in window)){alert('Audio pronunciation is not supported by this browser.');return;}
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang='en-GB';utterance.rate=0.82;utterance.pitch=1.05;
+  window.speechSynthesis.speak(utterance);
+}
+function playTone(freq=660,duration=0.09){
+  if(!soundEnabled)return;
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)return;
+    const ctx=new Ctx(),osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.type='square';osc.frequency.value=freq;gain.gain.value=0.035;
+    osc.connect(gain);gain.connect(ctx.destination);osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration);
+    osc.stop(ctx.currentTime+duration);osc.onended=()=>ctx.close();
+  }catch(e){}
+}
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  document.getElementById('soundToggle').textContent='🎵 Sound effects: '+(soundEnabled?'ON':'OFF');
+}
+const miniScenes=[
+ {word:'ADJECTIVE',caption:'An adjective is a describing word.',character:'🧙',speech:'An adjective is a describing word.'},
+ {word:'TALL',caption:'Alex is tall. Tall describes Alex.',character:'🧑',speech:'Alex is tall. Tall describes Alex.'},
+ {word:'CURLY',caption:'Mia has curly hair. Curly describes her hair.',character:'👩',speech:'Mia has curly hair. Curly describes her hair.'},
+ {word:'FRIENDLY',caption:'Ben is friendly. Friendly describes his personality.',character:'🧒',speech:'Ben is friendly. Friendly describes his personality.'},
+ {word:'YOU TRY!',caption:'Can you find an adjective to describe someone?',character:'⭐',speech:'Your turn. Can you find an adjective to describe someone?'}
+];
+let lessonTimer=null,lessonIndex=0;
+function showMiniScene(){
+ const s=miniScenes[lessonIndex];
+ document.getElementById('lessonWord').textContent=s.word;
+ document.getElementById('lessonCaption').textContent=s.caption;
+ document.getElementById('lessonCharacter').textContent=s.character;
+ document.getElementById('lessonProgress').style.width=((lessonIndex+1)/miniScenes.length*100)+'%';
+ speakText(s.speech);
+}
+function startMiniLesson(){
+ if(lessonTimer)return;
+ showMiniScene();
+ lessonTimer=setInterval(()=>{
+  lessonIndex++;
+  if(lessonIndex>=miniScenes.length){pauseMiniLesson();return;}
+  showMiniScene();
+ },4800);
+ document.getElementById('lessonPlay').textContent='▶ RESUME LESSON';
+}
+function pauseMiniLesson(){
+ if(lessonTimer){clearInterval(lessonTimer);lessonTimer=null;}
+ if('speechSynthesis' in window)window.speechSynthesis.pause();
+}
+function restartMiniLesson(){
+ pauseMiniLesson();
+ if('speechSynthesis' in window)window.speechSynthesis.cancel();
+ lessonIndex=0;
+ document.getElementById('lessonProgress').style.width='0%';
+ document.getElementById('lessonPlay').textContent='▶ PLAY LESSON';
+ startMiniLesson();
+}
+function addAudioButtons(){
+ document.querySelectorAll('#appearanceCards .word-card,#personalityCards .word-card').forEach(card=>{
+  const btn=card.querySelector('button');
+  if(btn&&!card.querySelector('.speak-word')){
+   const word=btn.textContent.replace('▣ TAP','').trim().replace(/\s+/g,' ');
+   const audio=document.createElement('button');
+   audio.className='small-btn speak-word';audio.type='button';audio.textContent='🔊 LISTEN';
+   audio.setAttribute('aria-label','Listen to '+word);
+   audio.onclick=()=>speakText(word.toLowerCase());card.appendChild(audio);
+  }
+ });
+}
+
+let listeningIndex=0;
+const listeningWords=['friendly','tall','curly','cheerful','helpful'];
+function playListeningWord(){
+  const word=listeningWords[listeningIndex];
+  speakText(word);
+  document.getElementById('listenFeedback').textContent='Listen carefully and choose the word.';
+}
+function checkListening(){
+  const selected=document.getElementById('listenAnswer').value;
+  const fb=document.getElementById('listenFeedback');
+  if(selected===listeningWords[listeningIndex]){
+    fb.textContent='✓ Correct! Great listening!';fb.className='feedback good';addStar();
+    listeningIndex=(listeningIndex+1)%listeningWords.length;
+    document.getElementById('listenRound').textContent='Round '+(listeningIndex+1)+' of 5';
+    document.getElementById('listenAnswer').value='';
+  }else{fb.textContent='Not quite. Listen again and try once more.';fb.className='feedback bad';playTone(220,.15);}
+}
+let selectedDragWord=null;
+document.addEventListener('click',e=>{
+  const item=e.target.closest('.drag-item');
+  if(item){selectedDragWord=item.dataset.word;document.querySelectorAll('.drag-item').forEach(x=>x.style.outline='');item.style.outline='4px dashed #e87575';}
+  const zone=e.target.closest('.drop-zone');
+  if(zone&&selectedDragWord){placeDragWord(zone,selectedDragWord);selectedDragWord=null;document.querySelectorAll('.drag-item').forEach(x=>x.style.outline='');}
+});
+document.addEventListener('dragstart',e=>{
+  const item=e.target.closest('.drag-item');
+  if(item&&e.dataTransfer)e.dataTransfer.setData('text/plain',item.dataset.word);
+});
+document.querySelectorAll('.drop-zone').forEach(zone=>{
+  zone.addEventListener('dragover',e=>e.preventDefault());
+  zone.addEventListener('drop',e=>{e.preventDefault();placeDragWord(zone,e.dataTransfer.getData('text/plain'));});
+});
+function placeDragWord(zone,word){
+  if(!word)return;
+  const fb=document.getElementById('dragFeedback');
+  if(zone.dataset.answer===word){
+    zone.textContent=word.toUpperCase()+' ✓';zone.style.borderStyle='solid';zone.dataset.completed='1';
+    fb.textContent='Correct match! Well done!';fb.className='feedback good';addStar();
+    const item=document.querySelector('.drag-item[data-word="'+word+'"]');if(item)item.disabled=true;
+  }else{fb.textContent='Try another word. Think about the meaning!';fb.className='feedback bad';}
+}
+
+</script>
+<script>document.querySelectorAll(".level").forEach(btn=>btn.addEventListener("click",()=>playTone(520,.06)));</script>
+</body></html>
